@@ -21,7 +21,8 @@ defmodule CDP.MixProject do
   defp deps do
     [
       {:websockex, "~> 0.5"},
-      {:req, "~> 0.5"}
+      {:req, "~> 0.5"},
+      {:jason, "~> 1.4"}
     ]
   end
 end
