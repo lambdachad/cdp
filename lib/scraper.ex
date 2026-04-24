@@ -54,6 +54,49 @@ defmodule CDP.Scraper do
     {:reply, result, state}
   end
 
+  def handle_call({:wait_for_selector, selector, timeout}, _from, %{client: client} = state) do
+    {:ok, result} =
+      CDP.Client.send_command(client, "Runtime.evaluate", %{
+        expression: """
+        new Promise((resolve, reject) => {
+          const el = document.querySelector('#{selector}');
+          if (el) return resolve(true);
+          const observer = new MutationObserver(() => {
+            if (document.querySelector('#{selector}')) {
+              observer.disconnect();
+              resolve(true);
+            }
+          });
+          observer.observe(document, {childList: true, subtree: true});
+          setTimeout(() => { observer.disconnect(); reject(new Error('timeout')); }, #{timeout});
+        })
+        """,
+        awaitPromise: true,
+        returnByValue: true
+      })
+
+    case result["result"]["type"] do
+      "boolean" -> {:reply, :ok, state}
+      "object" -> {:reply, {:error, "selector #{selector} not found within #{timeout}ms"}, state}
+    end
+  end
+
+  def handle_call({:click, selector}, _from, %{client: client} = state) do
+    {:ok, result} =
+      CDP.Client.send_command(client, "Runtime.evaluate", %{
+        expression: """
+        (() => {
+          const el = document.querySelector('#{selector}');
+          if (el) { el.click(); return true; }
+          return false;
+        })()
+        """,
+        returnByValue: true
+      })
+
+    {:reply, result["result"]["value"], state}
+  end
+
   def handle_call(:stop, _from, %{browser: browser} = state) do
     CDP.Chromium.kill(browser)
     {:stop, :normal, :ok, state}
@@ -73,5 +116,13 @@ defmodule CDP.Scraper do
 
   def screenshot(pid) do
     GenServer.call(pid, {:screenshot})
+  end
+
+  def wait_for_selector(pid, selector, timeout \\ 10_000) do
+    GenServer.call(pid, {:wait_for_selector, selector, timeout})
+  end
+
+  def click(pid, selector) do
+    GenServer.call(pid, {:click, selector})
   end
 end

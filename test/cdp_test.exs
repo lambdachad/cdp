@@ -24,6 +24,20 @@ defmodule CDP.ScraperTest do
     assert String.length(result["data"]) > 0
     CDP.Scraper.stop(scraper)
   end
+
+  test "wait_for_selector returns ok when element exists" do
+    {:ok, scraper} = CDP.Scraper.start_link()
+    CDP.Scraper.navigate(scraper, "https://example.com")
+    assert :ok == CDP.Scraper.wait_for_selector(scraper, "h1")
+    CDP.Scraper.stop(scraper)
+  end
+
+  test "click returns true when element exists" do
+    {:ok, scraper} = CDP.Scraper.start_link()
+    CDP.Scraper.navigate(scraper, "https://example.com")
+    assert true == CDP.Scraper.click(scraper, "a")
+    CDP.Scraper.stop(scraper)
+  end
 end
 
 defmodule CDP.ChromiumTest do
