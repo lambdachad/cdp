@@ -9,7 +9,8 @@ defmodule Automator.MixProject do
       start_permanent: Mix.env() == :prod,
       description: "Chrome DevTools Protocol scraper for Elixir",
       package: package(),
-      deps: deps()
+      deps: deps(),
+      docs: docs()
     ]
   end
 
@@ -33,6 +34,26 @@ defmodule Automator.MixProject do
       files: ~w(lib .formatter.exs mix.exs README* LICENSE*),
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/lambdachad/automator"}
+    ]
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      extras: ["README.md"],
+      source_url: "https://github.com/lambdachad/automator",
+      groups_for_modules: [
+        "High-Level API": [
+          Automator.Scraper
+        ],
+        "Low-Level API": [
+          Automator.Chromium,
+          Automator.Client
+        ],
+        Entrypoint: [
+          Automator
+        ]
+      ]
     ]
   end
 end

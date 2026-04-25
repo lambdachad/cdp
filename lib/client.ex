@@ -1,20 +1,17 @@
 defmodule Automator.Client do
   @moduledoc """
-  Low-level Automator WebSocket client.
+  Low-level WebSocket client for sending raw Chrome DevTools Protocol (CDP) commands.
 
-  Connects to a Chromium WebSocket debugger URL and sends Automator commands
-  using the JSON-RPC protocol. Use this when you need direct access to
-  Automator methods not exposed by `Automator.Scraper`.
-
-  For most use cases, prefer `Automator.Scraper` which manages the browser
-  and page connection automatically.
+  Connects to a Chromium WebSocket debugger URL and sends commands using the
+  JSON-RPC protocol. Use this when you need direct access to CDP methods not
+  exposed by `Automator.Scraper`.
 
   ## Example
 
       # Connect to a browser-level WebSocket
       {:ok, client} = Automator.Client.start_link(ws_url)
 
-      # Send any Automator command
+      # Send any CDP command
       {:ok, result} = Automator.Client.send_command(client, "Browser.getVersion")
       IO.inspect(result["product"])
       # => "Chrome/145.0.7632.159"
@@ -22,6 +19,41 @@ defmodule Automator.Client do
       # Connect to a page target for page-level commands
       {:ok, page_client} = Automator.Client.start_link(page_ws_url)
       {:ok, _} = Automator.Client.send_command(page_client, "Page.navigate", %{url: "https://example.com"})
+
+  ## Protocol
+
+  Commands follow the Chrome DevTools Protocol JSON-RPC format:
+
+      {"id": 1, "method": "Page.navigate", "params": {"url": "https://example.com"}}
+
+  Responses are matched to callers by the `id` field. See the
+  [CDP protocol reference](https://chromedevtools.github.io/devtools-protocol/)
+  for all available domains and methods.
+
+  ## Common CDP Domains
+
+  | Domain | Use case |
+  |--------|----------|
+  | `Page` | Navigation, screenshots, lifecycle events |
+  | `Runtime` | JavaScript evaluation, object inspection |
+  | `DOM` | DOM tree traversal, node manipulation |
+  | `Network` | Request interception, cookies |
+  | `Input` | Mouse/keyboard simulation |
+  | `Emulation` | Device emulation, viewport, geolocation |
+  | `Browser` | Browser info, window management |
+  | `Target` | Tab/page management |
+
+  ## When to Use
+
+  Use `Client` directly when you need:
+
+    * CDP domains not exposed by `Automator.Scraper` (e.g., `DOM`, `Network`, `Input`)
+    * Fine-grained control over command parameters
+    * Browser-level commands (via the browser WebSocket URL)
+    * Multiple concurrent page connections to the same browser
+
+  For most scraping tasks, `Automator.Scraper` is simpler and handles connection
+  management automatically.
 
   """
 

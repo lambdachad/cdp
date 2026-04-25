@@ -10,17 +10,33 @@ defmodule Automator.Chromium do
       browser = Automator.Chromium.spawn()
       # => %{chromium: #Port<...>, os_pid: 1234, port: 9222, ws_url: "ws://..."}
 
-      # Use the ws_url to connect...
+      # Connect to the browser target
+      {:ok, client} = Automator.Client.start_link(browser.ws_url)
+      {:ok, result} = Automator.Client.send_command(client, "Browser.getVersion")
+
       Automator.Chromium.kill(browser)
 
-  ## Browser struct
+  ## Browser Flags
 
-  `spawn/0` returns a map with these keys:
+  Chromium is launched with these flags:
 
-    * `:chromium` - The Erlang port reference
-    * `:os_pid` - The OS process ID, needed for `kill/1`
-    * `:port` - The TCP port Chromium is listening on
-    * `:ws_url` - The WebSocket debugger URL for the browser target
+  | Flag | Value |
+  |------|-------|
+  | `--headless` | `new` |
+  | `--no-sandbox` | — |
+  | `--disable-gpu` | — |
+  | `--window-size` | `1920,1080` |
+  | `--remote-debugging-port` | auto-detected (available TCP port) |
+
+  ## When to Use
+
+  Use `Chromium` directly when you want to:
+
+    * Connect multiple `Automator.Client` instances to the same browser
+    * Manage the browser lifecycle independently of scraping sessions
+    * Access the browser-level WebSocket target (not a page target)
+
+  For most use cases, prefer `Automator.Scraper` which handles this automatically.
 
   """
 

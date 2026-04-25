@@ -18,8 +18,32 @@ defmodule Automator.Scraper do
       Automator.Scraper.click(scraper, "a")
 
       %{"data" => base64} = Automator.Scraper.screenshot(scraper)
+      File.write!("page.png", Base.decode64!(base64))
 
       Automator.Scraper.stop(scraper)
+
+  ## Architecture
+
+  `Scraper` is a `GenServer` that owns:
+
+    1. A headless Chromium process (via `Automator.Chromium.spawn/0`)
+    2. A WebSocket connection to a page target (via `Automator.Client`)
+
+  When you call `stop/1`, the Chromium process is killed and the GenServer
+  terminates.
+
+  ## CDP Commands Used
+
+  | Function | CDP Method |
+  |----------|------------|
+  | `navigate/2` | `Page.navigate` |
+  | `eval/2` | `Runtime.evaluate` |
+  | `click/2` | `Runtime.evaluate` (with `document.querySelector`) |
+  | `wait_for_selector/3` | `Runtime.evaluate` (with `MutationObserver`) |
+  | `screenshot/1` | `Page.captureScreenshot` |
+  | `set_cookie/4` | `Network.setCookie` |
+
+  For raw CDP access beyond these methods, use `Automator.Client` directly.
 
   """
 
