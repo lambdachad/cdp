@@ -277,6 +277,7 @@ defmodule Automator.Scraper do
   end
 
   def init(args) do
+    Process.flag(:trap_exit, true)
     browser = Automator.Chromium.spawn()
     {:ok, %{body: targets}} = Req.get("http://127.0.0.1:#{browser.port}/json")
 
@@ -295,6 +296,12 @@ defmodule Automator.Scraper do
 
     {:ok, %__MODULE__{browser: browser, client: client}}
   end
+
+  def terminate(_reason, %__MODULE__{browser: browser}) do
+    Automator.Chromium.kill(browser)
+  end
+
+  def handle_info(_msg, state), do: {:noreply, state}
 
   def handle_call({:navigate, url, wait_ms}, _from, %__MODULE__{client: client} = state) do
     {:ok, result} = Automator.Client.send_command(client, "Page.navigate", %{url: url})
