@@ -4,7 +4,7 @@ defmodule Automator.MixProject do
   def project do
     [
       app: :automator,
-      version: "0.2.0",
+      version: "0.2.1",
       elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
       description: "Chrome DevTools Protocol scraper for Elixir",
@@ -25,7 +25,7 @@ defmodule Automator.MixProject do
       {:websockex, "~> 0.5"},
       {:req, "~> 0.5"},
       {:jason, "~> 1.4"},
-      {:typedstruct, "~> 0.5"},
+      {:typed_struct, "~> 0.3"},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false}
     ]
   end
